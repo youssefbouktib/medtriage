@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "medtriage-agent"
+version = "0.1.0"
+description = "LangGraph agent that triages clinical notes: specialty, key facts, red flags, urgency, summary"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=0.2",
+    "google-genai>=1.0",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+# Hugging Face zero-shot specialty classifier (downloads a ~700 MB model on first run)
+hf = ["transformers>=4.44", "torch>=2.3"]
+# LLM-as-judge evaluation
+eval = ["deepeval>=2.0"]
+dev = ["pytest>=8.0"]
+# Web demo
+ui = ["streamlit>=1.40"]
+
+[project.scripts]
+medtriage = "medtriage.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+asyncio_default_fixture_loop_scope = "function"  # deepeval pulls in pytest-asyncio
+markers = ["eval: calls real models (Gemini + Hugging Face); needs GEMINI_API_KEY"]
