@@ -83,9 +83,16 @@ The classifier model (~700 MB) downloads on first use and needs ~2 GB of free RA
 
 ## CI
 
-GitHub Actions runs the offline tests on every push, and the real-model evals on `main`
-(add `GEMINI_API_KEY` under *Settings → Secrets and variables → Actions*). Eval outputs
-are uploaded as a build artifact.
+Two GitHub Actions workflows:
+- **ci**: the offline unit tests, on every push (free, ~30 s).
+- **evals**: the real-model evals, only when `src/`, `evals/` or `pyproject.toml` change on
+  `main`, or on demand (*Actions → evals → Run workflow*). One run at a time: the free Gemini
+  tier allows about 20 requests per model per day. Needs the `GEMINI_API_KEY` repository
+  secret; eval outputs are uploaded as a build artifact.
+
+Measured on CI, where the primary model was overloaded and the fallbacks answered:
+urgency 83 % (10/12), 0 emergencies under-triaged, specialty 83 %, faithfulness 0.98.
+Accuracy dips slightly on the smaller fallback models; the safety rules don't depend on the model.
 
 ## Project layout
 
