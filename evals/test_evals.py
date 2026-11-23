@@ -22,6 +22,10 @@ from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv(usecwd=True))
 
+if os.getenv("CI") and not os.getenv("GEMINI_API_KEY"):
+    # Locally a missing key skips the evals; in CI it must fail, or a green build would hide them.
+    raise RuntimeError("GEMINI_API_KEY secret is not set: add it under Settings > Secrets > Actions")
+
 pytestmark = [
     pytest.mark.eval,
     pytest.mark.skipif(not os.getenv("GEMINI_API_KEY"), reason="GEMINI_API_KEY not set"),
