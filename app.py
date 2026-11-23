@@ -46,8 +46,21 @@ CSS = """
 html, body, [class*="st-"], .stMarkdown, textarea, button, input {
   font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;
 }
-.stApp { background: var(--paper); color: var(--ink); }
-.block-container { max-width: 1120px; padding-top: 2.2rem; }
+/* background: ECG paper (5 mm major / 1 mm minor grid) with a heartbeat trace along the top */
+.stApp {
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image:
+    url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='90' viewBox='0 0 260 90'%3E%3Cpath d='M0 60 H70 q7 -9 14 0 H104 l5 7 l8 -52 l8 62 l6 -17 H160 q12 -16 24 0 H260' fill='none' stroke='%230E6E6E' stroke-opacity='.32' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E"),
+    linear-gradient(rgba(200,16,46,.085) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,16,46,.085) 1px, transparent 1px),
+    linear-gradient(rgba(200,16,46,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,16,46,.04) 1px, transparent 1px);
+  background-size: 260px 90px, 40px 40px, 40px 40px, 8px 8px, 8px 8px;
+  background-repeat: repeat-x, repeat, repeat, repeat, repeat;
+  background-position: 0 -6px, 0 0, 0 0, 0 0, 0 0;
+}
+.block-container { max-width: 1120px; padding-top: 5.6rem; }  /* room for the ECG trace */
 header[data-testid="stHeader"] { background: transparent; }
 
 /* masthead */
