@@ -29,6 +29,26 @@ their costs differ: sending a patient to the ER too early is cheap, missing one 
 
 12 notes is a small test set: treat these numbers as a smoke test, not a benchmark.
 
+### Specialty on real notes (MTSamples)
+
+The classifier was also run on **90 real, de-identified transcriptions** from
+[MTSamples](https://www.kaggle.com/datasets/tboyle10/medicaltranscriptions) (10 per specialty,
+no LLM calls): **64 %** (58/90), against 83 % on the hand-written golden set.
+
+| Specialty | Correct | | Specialty | Correct |
+|---|---|---|---|---|
+| Cardiovascular / Pulmonary | 8/10 | | Neurology | 7/10 |
+| Dermatology | 8/10 | | Orthopedics | 7/10 |
+| Gastroenterology | 8/10 | | Urology | 7/10 |
+| Obstetrics / Gynecology | 8/10 | | General medicine | 3/10 |
+| | | | Psychiatry | **2/10** |
+
+Real notes are long and messy, and two categories break the zero-shot approach:
+psychiatry notes were labelled *neurology* 5 times out of 10 (both talk about the brain),
+and "general medicine" overlaps with everything. Reproduce with
+`python evals/mtsamples_specialty.py --per-class 10` after downloading the dataset
+(`kaggle datasets download tboyle10/medicaltranscriptions -p data/raw --unzip`).
+
 ## How it works
 
 ```
@@ -80,6 +100,8 @@ pytest evals -m eval -s                  # real-model evals
 ```
 
 The classifier model (~700 MB) downloads on first use and needs ~2 GB of free RAM.
+It is loaded in float32 on purpose: the checkpoint is stored in float16, which runs about
+4x slower on a laptop CPU.
 
 ## CI
 
@@ -110,7 +132,11 @@ tests/           offline unit tests
 ```
 
 ## Roadmap
-- [ ] Run on the public **MTSamples** dataset (~5,000 de-identified transcriptions, Kaggle)
-      and grow the golden set beyond 12 notes
-- [ ] Compare the zero-shot classifier with a fine-tuned clinical model (Bio_ClinicalBERT)
+- [x] Benchmark the specialty classifier on real MTSamples notes (64 % on 90 notes)
+- [ ] Fine-tune a clinical model (Bio_ClinicalBERT) on MTSamples to fix psychiatry vs neurology,
+      on a free Kaggle GPU
+- [ ] Red-flag rules for emergencies without a current keyword (e.g. "worst headache of my
+      life", thunderclap headache) and forward-looking negation ("chest pain was not present")
+- [ ] Grow the golden set beyond 12 notes, with labels checked by a clinician
+- [ ] Faster CPU inference with OpenVINO
 - [ ] Langfuse tracing
