@@ -4,7 +4,7 @@ from medtriage.classifier import HFZeroShotClassifier
 def test_classifier_scores_descriptions_and_returns_the_label():
     seen = {}
 
-    def fake_pipe(text, candidate_labels, hypothesis_template):
+    def fake_pipe(text, candidate_labels, hypothesis_template, **kwargs):
         seen["candidates"] = candidate_labels
         return {"labels": ["the skin", "the heart"], "scores": [0.9, 0.1]}
 
@@ -18,6 +18,6 @@ def test_classifier_scores_descriptions_and_returns_the_label():
 
 def test_label_without_description_is_used_as_is():
     clf = HFZeroShotClassifier.__new__(HFZeroShotClassifier)
-    clf._pipe = lambda text, candidate_labels, hypothesis_template: {"labels": candidate_labels, "scores": [1.0]}
+    clf._pipe = lambda text, candidate_labels, hypothesis_template, **kw: {"labels": candidate_labels, "scores": [1.0]}
     clf.descriptions = {}
     assert clf.classify("note", ["urology"]) == ("urology", 1.0)

@@ -19,7 +19,11 @@ class HFZeroShotClassifier:
 
         from .state import SPECIALTY_DESCRIPTIONS
 
-        self._pipe = pipeline("zero-shot-classification", model=model)
+        import torch
+
+        # float32 explicitly: the checkpoint is stored in float16, and recent transformers load
+        # it as is. float16 runs ~50x slower on a CPU (18 s instead of ~0.3 s per comparison).
+        self._pipe = pipeline("zero-shot-classification", model=model, dtype=torch.float32)
         self.descriptions = SPECIALTY_DESCRIPTIONS if descriptions is None else descriptions
 
     def classify(self, text: str, labels: list[str]) -> tuple[str, float]:
@@ -29,6 +33,7 @@ class HFZeroShotClassifier:
             text[:2000],  # the model reads ~512 tokens; the start of a note is the most informative
             candidate_labels=list(hypotheses),
             hypothesis_template="This medical note is about {}.",
+            batch_size=len(hypotheses),  # score all labels in one forward pass
         )
         return hypotheses[res["labels"][0]], float(res["scores"][0])
 
