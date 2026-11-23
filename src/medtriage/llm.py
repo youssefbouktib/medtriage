@@ -22,7 +22,7 @@ def parse_json(text: str) -> dict:
 
 
 DEFAULT_MODEL = "gemini-3.8-flash"
-DEFAULT_FALLBACKS = ("gemini-3.5-flash", "gemini-3.5-flash-lite")
+DEFAULT_FALLBACKS = ("gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite")
 
 TRANSIENT_CODES = ("429", "500", "503", "504", "RESOURCE_EXHAUSTED", "UNAVAILABLE", "DEADLINE_EXCEEDED")
 TRANSIENT_NETWORK = ("RemoteProtocolError", "ConnectError", "ReadError", "Timeout")  # matched in class names
@@ -33,12 +33,13 @@ def is_transient(exc: Exception) -> bool:
     return any(c in msg for c in TRANSIENT_CODES) or any(n in kind for n in TRANSIENT_NETWORK)
 
 
-def call_with_fallback(call: Callable[[str], object], models: list[str], attempts: int = 6, sleep=time.sleep):
+def call_with_fallback(call: Callable[[str], object], models: list[str], attempts: int | None = None, sleep=time.sleep):
     """Call `call(model)`; on a transient error, retry with the next model in the list.
 
     Rotating models beats waiting on one: when a model is overloaded (503) the
     others usually still answer. A full pass through the list backs off before the next.
     """
+    attempts = attempts or 3 * len(models)  # three full passes through the list
     for i in range(attempts):
         model = models[i % len(models)]
         try:
@@ -47,7 +48,7 @@ def call_with_fallback(call: Callable[[str], object], models: list[str], attempt
             if not is_transient(exc) or i == attempts - 1:
                 raise
             if (i + 1) % len(models) == 0:
-                sleep(min(60, 2 ** (i // len(models) + 2)))
+                sleep(min(60, 10 * 2 ** (i // len(models))))  # 10 s, then 20 s between passes
 
 
 class GeminiLLM:
